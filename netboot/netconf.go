@@ -25,7 +25,7 @@ type AddrConf struct {
 // NetConf holds multiple IP configuration for a NIC, and DNS configuration
 type NetConf struct {
 	Addresses     []AddrConf
-	Classless     []ClasslessRoutes
+	Classless     dhcpv4.ClasslessRoutes
 	DNSServers    []net.IP
 	DNSSearchList []string
 	Routers       []net.IP
@@ -132,7 +132,7 @@ func GetNetConfFromPacketv4(d *dhcpv4.DHCPv4) (*NetConf, error) {
 	classlessList := d.Classless()
 	log.Printf("%+v", classlessList)
 	if len(classlessList) != 0 {
-		netconf.Routers = classlessList
+		netconf.Classless = classlessList
 		return &netconf, nil
 	}
 	routersList := d.Router()
@@ -233,8 +233,8 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 			}
 
 		case len(netconf.Classless) > 0:
-			for _, route := range netconf.Classless {
-				route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: route.Destination, Src: src, Gw: route.Router}
+			for _, croute := range netconf.Classless {
+				route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: &croute.Destination, Src: src, Gw: croute.Router}
 				err = netlink.RouteAdd(&route)
 				if err != nil {
 					return fmt.Errorf("could not add route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
