@@ -10,10 +10,11 @@ import (
 type ClasslessRoutes []ClasslessRoute
 
 type ClasslessRoute struct {
-	Destination net.IPNet
+	Destination *net.IPNet
 	Router      net.IP
 }
 
+// FromBytes implements the option decoder interface
 func (c *ClasslessRoutes) FromBytes(data []byte) error {
 	buf := uio.NewBigEndianBuffer(data)
 	// minimum length is 5 bytes
@@ -25,6 +26,8 @@ func (c *ClasslessRoutes) FromBytes(data []byte) error {
 	var mask net.IPMask
 	var sigbits int
 	var maskCIDR int
+	var router net.IP
+	var dst net.IP
 
 	for {
 		if !buf.Has(1) {
@@ -62,12 +65,19 @@ func (c *ClasslessRoutes) FromBytes(data []byte) error {
 		}
 		r := buf.CopyN(net.IPv4len)
 
-		cr = ClasslessRoute{
-			Destination: net.IPNet{
-				IP:   net.IP(d),
+		cr = ClasslessRoute{}
+		router = net.IP(r)
+		if router.String() == net.IPv4zero.String() {
+			router = nil
+		}
+		cr.Router = router
+
+		dst = net.IP(d)
+		if dst.String() != net.IPv4zero.String() {
+			cr.Destination = &net.IPNet{
+				IP:   dst,
 				Mask: mask,
-			},
-			Router: net.IP(r),
+			}
 		}
 
 		*c = append(*c, cr)
@@ -90,6 +100,7 @@ func (c ClasslessRoutes) String() string {
 	return str
 }
 
+// GetClasslessRoutes returrns a slice of ClasslessRoute structs
 func GetClasslessRoutes(code OptionCode, o Options) ClasslessRoutes {
 	v := o.Get(code)
 	if v == nil {
