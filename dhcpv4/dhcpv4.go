@@ -333,8 +333,8 @@ func (d *DHCPv4) IsUnicast() bool {
 	return d.Flags&0x8000 == 0
 }
 
-func (d *DHCPv4) Classless() []net.IP {
-	return GetIPs(OptionClasslessStaticRouteOption, d.Options)
+func (d *DHCPv4) Classless() ClasslessRoutes {
+	return GetClasslessRoutes(OptionClasslessStaticRouteOption, d.Options)
 }
 
 // SetUnicast sets the packet to be a unicast packet.

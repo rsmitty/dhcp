@@ -25,6 +25,7 @@ type AddrConf struct {
 // NetConf holds multiple IP configuration for a NIC, and DNS configuration
 type NetConf struct {
 	Addresses     []AddrConf
+	Classless     []ClasslessRoutes
 	DNSServers    []net.IP
 	DNSSearchList []string
 	Routers       []net.IP
@@ -204,30 +205,41 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 
 	// add default route information for v4 space. only one default route is allowed
 	// so ignore the others if there are multiple ones
-	if len(netconf.Routers) > 0 {
+	if len(netconf.Routers) > 0 || len(netconf.Classless) > 0 {
 		iface, err = netlink.LinkByName(ifname)
 		if err != nil {
 			return fmt.Errorf("could not obtain interface when adding default route: %v", err)
 		}
-		// if there is a default v4 route, remove it, as we want to add the one we just got during
-		// the dhcp transaction. if the route is not present, which is the final state we want,
-		// an error is returned so ignore it
-		dst := &net.IPNet{
-			IP:   net.IPv4(0, 0, 0, 0),
-			Mask: net.CIDRMask(0, 32),
-		}
+
 		// Remove a possible default route (dst 0.0.0.0) to the L2 domain (gw: 0.0.0.0), which is what
 		// a client would want to add before initiating the DHCP transaction in order not to fail with
 		// ENETUNREACH. If this default route has a specific metric assigned, it doesn't get removed.
 		// The code doesn't remove any other default route (i.e. gw != 0.0.0.0).
-		route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: net.IPv4(0, 0, 0, 0)}
+		// an error is returned so ignore it
+		dst := &net.IPNet{
+			IP:   net.IPv4zero,
+			Mask: net.CIDRMask(0, 32),
+		}
+		route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: net.IPv4zero}
 		netlink.RouteDel(&route)
 
 		src := netconf.Addresses[0].IPNet.IP
-		route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: src, Gw: netconf.Routers[0]}
-		err = netlink.RouteAdd(&route)
-		if err != nil {
-			return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
+		switch {
+		case len(netconf.Routers) > 0:
+			route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: src, Gw: netconf.Routers[0]}
+			err = netlink.RouteAdd(&route)
+			if err != nil {
+				return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
+			}
+
+		case len(netconf.Classless) > 0:
+			for _, route := range netconf.Classless {
+				route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: route.Destination, Src: src, Gw: route.Router}
+				err = netlink.RouteAdd(&route)
+				if err != nil {
+					return fmt.Errorf("could not add route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
+				}
+			}
 		}
 	}
 

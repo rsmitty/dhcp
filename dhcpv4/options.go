@@ -337,7 +337,12 @@ func getOption(code OptionCode, data []byte, vendorDecoder OptionDecoder) fmt.St
 
 	case OptionVendorSpecificInformation:
 		d = vendorDecoder
+
+	case OptionClasslessStaticRouteOption:
+		d = &ClasslessRoutes{}
+
 	}
+
 	if d != nil && d.FromBytes(data) == nil {
 		return d
 	}
