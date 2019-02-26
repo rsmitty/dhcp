@@ -3,7 +3,7 @@ package ztpv4
 import (
 	"testing"
 
-	"github.com/insomniacslk/dhcp/dhcpv4"
+	"github.com/andrewrynhard/dhcp/dhcpv4"
 	"github.com/stretchr/testify/require"
 )
 

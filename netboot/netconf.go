@@ -4,13 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/insomniacslk/dhcp/dhcpv4"
-	"github.com/insomniacslk/dhcp/dhcpv6"
+	"github.com/andrewrynhard/dhcp/dhcpv4"
+	"github.com/andrewrynhard/dhcp/dhcpv6"
 	"github.com/vishvananda/netlink"
 )
 
@@ -127,6 +128,12 @@ func GetNetConfFromPacketv4(d *dhcpv4.DHCPv4) (*NetConf, error) {
 	}
 
 	// get default gateway
+	classlessList := d.Classless()
+	log.Printf("%+v", classlessList)
+	if len(classlessList) != 0 {
+		netconf.Routers = classlessList
+		return &netconf, nil
+	}
 	routersList := d.Router()
 	if len(routersList) == 0 {
 		return nil, errors.New("no routers specified in the corresponding option")

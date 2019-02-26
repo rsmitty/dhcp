@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/insomniacslk/dhcp/dhcpv4"
+	"github.com/andrewrynhard/dhcp/dhcpv4"
 	"golang.org/x/net/ipv4"
 	"golang.org/x/sys/unix"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/insomniacslk/dhcp/dhcpv4"
+	"github.com/andrewrynhard/dhcp/dhcpv4"
 	"github.com/u-root/u-root/pkg/uio"
 )
 

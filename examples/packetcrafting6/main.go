@@ -4,8 +4,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/insomniacslk/dhcp/dhcpv6"
-	"github.com/insomniacslk/dhcp/iana"
+	"github.com/andrewrynhard/dhcp/dhcpv6"
+	"github.com/andrewrynhard/dhcp/iana"
 )
 
 func main() {

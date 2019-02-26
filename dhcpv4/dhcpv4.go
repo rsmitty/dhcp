@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/insomniacslk/dhcp/iana"
-	"github.com/insomniacslk/dhcp/rfc1035label"
+	"github.com/andrewrynhard/dhcp/iana"
+	"github.com/andrewrynhard/dhcp/rfc1035label"
 	"github.com/u-root/u-root/pkg/uio"
 )
 
@@ -331,6 +331,10 @@ func (d *DHCPv4) SetBroadcast() {
 // IsUnicast indicates whether the packet is a unicast packet.
 func (d *DHCPv4) IsUnicast() bool {
 	return d.Flags&0x8000 == 0
+}
+
+func (d *DHCPv4) Classless() []net.IP {
+	return GetIPs(OptionClasslessStaticRouteOption, d.Options)
 }
 
 // SetUnicast sets the packet to be a unicast packet.
