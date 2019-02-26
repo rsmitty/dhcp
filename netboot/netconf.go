@@ -191,6 +191,7 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 			}
 		}
 	}
+
 	// configure /etc/resolv.conf
 	resolvconf := ""
 	for _, ns := range netconf.DNSServers {
@@ -205,7 +206,47 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 
 	// add default route information for v4 space. only one default route is allowed
 	// so ignore the others if there are multiple ones
-	if len(netconf.Routers) > 0 || len(netconf.Classless) > 0 {
+	if len(netconf.Classless) > 0 {
+		iface, err = netlink.LinkByName(ifname)
+		if err != nil {
+			return fmt.Errorf("could not obtain interface when adding classless route: %v", err)
+		}
+
+		initialRouteList, _ := netlink.RouteList(iface, 2)
+		fmt.Println("Initial route table:")
+		for _, routeEntry := range initialRouteList {
+			fmt.Printf("%v\n", routeEntry)
+		}
+
+		for _, croute := range netconf.Classless {
+			route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: croute.Destination, Gw: croute.Router, Protocol: 3, Type: 1, Table: 254}
+
+			//If scope set to zero (the default) and there's no gateway, reset it to link.
+			if route.Scope == netlink.SCOPE_UNIVERSE && route.Gw == nil {
+				route.Scope = netlink.SCOPE_LINK
+			}
+			for _, rt := range initialRouteList {
+				if route.Equal(rt) {
+					log.Println("Found matching route. Deleting.")
+					if err = netlink.RouteDel(&rt); err != nil {
+						log.Println("Failed to delete route", err)
+					}
+					break
+				}
+			}
+			log.Printf("Adding route %v", route)
+			if err := netlink.RouteAdd(&route); err != nil {
+				log.Printf("Failed to add route %v, Error: %v\n", route, err)
+			}
+
+		}
+
+		routelist, _ := netlink.RouteList(iface, 2)
+		fmt.Println("Final route table:")
+		for _, routeEntry := range routelist {
+			fmt.Printf("%v\n", routeEntry)
+		}
+	} else if len(netconf.Routers) > 0 {
 		iface, err = netlink.LinkByName(ifname)
 		if err != nil {
 			return fmt.Errorf("could not obtain interface when adding default route: %v", err)
@@ -224,24 +265,13 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 		netlink.RouteDel(&route)
 
 		src := netconf.Addresses[0].IPNet.IP
-		switch {
-		case len(netconf.Routers) > 0:
-			route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: src, Gw: netconf.Routers[0]}
-			err = netlink.RouteAdd(&route)
-			if err != nil {
-				return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
-			}
-
-		case len(netconf.Classless) > 0:
-			for _, croute := range netconf.Classless {
-				route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: &croute.Destination, Src: src, Gw: croute.Router}
-				err = netlink.RouteAdd(&route)
-				if err != nil {
-					return fmt.Errorf("could not add route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
-				}
-			}
+		route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: src, Gw: netconf.Routers[0]}
+		log.Printf("Router route: %v", route)
+		err = netlink.RouteAdd(&route)
+		if err != nil {
+			return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
 		}
-	}
 
+	}
 	return nil
 }
