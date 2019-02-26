@@ -3,7 +3,7 @@ package dhcpv4
 import (
 	"testing"
 
-	"github.com/andrewrynhard/dhcp/rfc1035label"
+	"github.com/rsmitty/dhcp/rfc1035label"
 	"github.com/stretchr/testify/require"
 )
 

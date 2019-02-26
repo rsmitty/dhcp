@@ -3,7 +3,7 @@ package dhcpv4
 import (
 	"testing"
 
-	"github.com/andrewrynhard/dhcp/iana"
+	"github.com/rsmitty/dhcp/iana"
 	"github.com/stretchr/testify/require"
 )
 

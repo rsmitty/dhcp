@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/andrewrynhard/dhcp/iana"
+	"github.com/rsmitty/dhcp/iana"
 )
 
 func randomReadMock(value []byte, n int, err error) func([]byte) (int, error) {

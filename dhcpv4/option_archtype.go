@@ -1,7 +1,7 @@
 package dhcpv4
 
 import (
-	"github.com/andrewrynhard/dhcp/iana"
+	"github.com/rsmitty/dhcp/iana"
 )
 
 // OptClientArch returns a new Client System Architecture Type option.

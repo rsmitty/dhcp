@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/andrewrynhard/dhcp/dhcpv4"
+	"github.com/rsmitty/dhcp/dhcpv4"
 	"github.com/stretchr/testify/require"
 )
 

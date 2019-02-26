@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andrewrynhard/dhcp/dhcpv6"
-	"github.com/andrewrynhard/dhcp/dhcpv6/client6"
-	"github.com/andrewrynhard/dhcp/interfaces"
+	"github.com/rsmitty/dhcp/dhcpv6"
+	"github.com/rsmitty/dhcp/dhcpv6/client6"
+	"github.com/rsmitty/dhcp/interfaces"
 	"github.com/stretchr/testify/require"
 )
 

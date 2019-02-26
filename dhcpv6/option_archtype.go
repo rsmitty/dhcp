@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/andrewrynhard/dhcp/iana"
+	"github.com/rsmitty/dhcp/iana"
 	"github.com/u-root/u-root/pkg/uio"
 )
 

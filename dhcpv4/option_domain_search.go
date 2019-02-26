@@ -1,7 +1,7 @@
 package dhcpv4
 
 import (
-	"github.com/andrewrynhard/dhcp/rfc1035label"
+	"github.com/rsmitty/dhcp/rfc1035label"
 )
 
 // OptDomainSearch returns a new domain search option.

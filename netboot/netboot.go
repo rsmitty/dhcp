@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/andrewrynhard/dhcp/dhcpv4"
-	"github.com/andrewrynhard/dhcp/dhcpv4/client4"
-	"github.com/andrewrynhard/dhcp/dhcpv6"
-	"github.com/andrewrynhard/dhcp/dhcpv6/client6"
+	"github.com/rsmitty/dhcp/dhcpv4"
+	"github.com/rsmitty/dhcp/dhcpv4/client4"
+	"github.com/rsmitty/dhcp/dhcpv6"
+	"github.com/rsmitty/dhcp/dhcpv6/client6"
 )
 
 var sleeper = func(d time.Duration) {

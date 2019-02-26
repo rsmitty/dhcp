@@ -8,8 +8,8 @@ import (
 	"time"
 
 	promise "github.com/fanliao/go-promise"
-	"github.com/andrewrynhard/dhcp/dhcpv4"
-	"github.com/andrewrynhard/dhcp/dhcpv4/client4"
+	"github.com/rsmitty/dhcp/dhcpv4"
+	"github.com/rsmitty/dhcp/dhcpv4/client4"
 )
 
 // Default ports

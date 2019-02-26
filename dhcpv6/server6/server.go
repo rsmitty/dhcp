@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andrewrynhard/dhcp/dhcpv6"
+	"github.com/rsmitty/dhcp/dhcpv6"
 )
 
 // Handler is a type that defines the handler function to be called every time a

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/andrewrynhard/dhcp/dhcpv4"
+	"github.com/rsmitty/dhcp/dhcpv4"
 )
 
 // VendorData is optional data a particular vendor may or may not include
