@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"os"
 	"strings"
@@ -128,13 +127,12 @@ func GetNetConfFromPacketv4(d *dhcpv4.DHCPv4) (*NetConf, error) {
 		netconf.DNSSearchList = dnsSearchList.Labels
 	}
 
-	// get default gateway
 	classlessList := d.Classless()
-	log.Printf("%+v", classlessList)
 	if len(classlessList) != 0 {
 		netconf.Classless = classlessList
 		return &netconf, nil
 	}
+
 	routersList := d.Router()
 	if len(routersList) == 0 {
 		return nil, errors.New("no routers specified in the corresponding option")
@@ -213,7 +211,6 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 		}
 
 		initialRouteList, _ := netlink.RouteList(iface, 2)
-		fmt.Println("Initial route table:")
 		for _, routeEntry := range initialRouteList {
 			fmt.Printf("%v\n", routeEntry)
 		}
@@ -227,22 +224,19 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 			}
 			for _, rt := range initialRouteList {
 				if route.Equal(rt) {
-					log.Println("Found matching route. Deleting.")
 					if err = netlink.RouteDel(&rt); err != nil {
-						log.Println("Failed to delete route", err)
+						fmt.Println("Failed to delete route", err)
 					}
 					break
 				}
 			}
-			log.Printf("Adding route %v", route)
 			if err := netlink.RouteAdd(&route); err != nil {
-				log.Printf("Failed to add route %v, Error: %v\n", route, err)
+				fmt.Printf("Failed to add route %v, Error: %v\n", route, err)
 			}
 
 		}
 
 		routelist, _ := netlink.RouteList(iface, 2)
-		fmt.Println("Final route table:")
 		for _, routeEntry := range routelist {
 			fmt.Printf("%v\n", routeEntry)
 		}
@@ -266,7 +260,6 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 
 		src := netconf.Addresses[0].IPNet.IP
 		route = netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: src, Gw: netconf.Routers[0]}
-		log.Printf("Router route: %v", route)
 		err = netlink.RouteAdd(&route)
 		if err != nil {
 			return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
