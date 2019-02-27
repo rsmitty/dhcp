@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/insomniacslk/dhcp/dhcpv6"
+	"github.com/autonomy/dhcp/dhcpv6"
 )
 
 var (

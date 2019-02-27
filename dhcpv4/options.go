@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/insomniacslk/dhcp/iana"
-	"github.com/insomniacslk/dhcp/rfc1035label"
+	"github.com/autonomy/dhcp/iana"
+	"github.com/autonomy/dhcp/rfc1035label"
 	"github.com/u-root/u-root/pkg/uio"
 )
 
@@ -337,7 +337,12 @@ func getOption(code OptionCode, data []byte, vendorDecoder OptionDecoder) fmt.St
 
 	case OptionVendorSpecificInformation:
 		d = vendorDecoder
+
+	case OptionClasslessStaticRouteOption:
+		d = &ClasslessRoutes{}
+
 	}
+
 	if d != nil && d.FromBytes(data) == nil {
 		return d
 	}

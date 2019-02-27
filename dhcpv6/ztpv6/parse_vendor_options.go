@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/insomniacslk/dhcp/dhcpv6"
+	"github.com/autonomy/dhcp/dhcpv6"
 )
 
 var (

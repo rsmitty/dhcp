@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/insomniacslk/dhcp/dhcpv4"
-	"github.com/insomniacslk/dhcp/dhcpv6"
+	"github.com/autonomy/dhcp/dhcpv4"
+	"github.com/autonomy/dhcp/dhcpv6"
 	"github.com/vishvananda/netlink"
 )
 
@@ -24,6 +24,7 @@ type AddrConf struct {
 // NetConf holds multiple IP configuration for a NIC, and DNS configuration
 type NetConf struct {
 	Addresses     []AddrConf
+	Classless     dhcpv4.ClasslessRoutes
 	DNSServers    []net.IP
 	DNSSearchList []string
 	Routers       []net.IP
@@ -126,7 +127,12 @@ func GetNetConfFromPacketv4(d *dhcpv4.DHCPv4) (*NetConf, error) {
 		netconf.DNSSearchList = dnsSearchList.Labels
 	}
 
-	// get default gateway
+	classlessList := d.Classless()
+	if len(classlessList) != 0 {
+		netconf.Classless = classlessList
+		return &netconf, nil
+	}
+
 	routersList := d.Router()
 	if len(routersList) == 0 {
 		return nil, errors.New("no routers specified in the corresponding option")
@@ -183,6 +189,7 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 			}
 		}
 	}
+
 	// configure /etc/resolv.conf
 	resolvconf := ""
 	for _, ns := range netconf.DNSServers {
@@ -197,23 +204,49 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 
 	// add default route information for v4 space. only one default route is allowed
 	// so ignore the others if there are multiple ones
-	if len(netconf.Routers) > 0 {
+	if len(netconf.Classless) > 0 {
+		iface, err = netlink.LinkByName(ifname)
+		if err != nil {
+			return fmt.Errorf("could not obtain interface when adding classless route: %v", err)
+		}
+
+		for _, croute := range netconf.Classless {
+			route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: croute.Destination, Gw: croute.Router, Protocol: 3, Type: 1, Table: 254}
+
+			//If scope set to zero (the default) and there's no gateway, reset it to link.
+			if route.Scope == netlink.SCOPE_UNIVERSE && route.Gw == nil {
+				route.Scope = netlink.SCOPE_LINK
+			}
+			for _, rt := range initialRouteList {
+				if route.Equal(rt) {
+					if err = netlink.RouteDel(&rt); err != nil {
+						fmt.Println("Failed to delete route", err)
+					}
+					break
+				}
+			}
+			if err := netlink.RouteAdd(&route); err != nil {
+				fmt.Printf("Failed to add route %v, Error: %v\n", route, err)
+			}
+
+		}
+
+	} else if len(netconf.Routers) > 0 {
 		iface, err = netlink.LinkByName(ifname)
 		if err != nil {
 			return fmt.Errorf("could not obtain interface when adding default route: %v", err)
 		}
-		// if there is a default v4 route, remove it, as we want to add the one we just got during
-		// the dhcp transaction. if the route is not present, which is the final state we want,
-		// an error is returned so ignore it
-		dst := &net.IPNet{
-			IP:   net.IPv4(0, 0, 0, 0),
-			Mask: net.CIDRMask(0, 32),
-		}
+
 		// Remove a possible default route (dst 0.0.0.0) to the L2 domain (gw: 0.0.0.0), which is what
 		// a client would want to add before initiating the DHCP transaction in order not to fail with
 		// ENETUNREACH. If this default route has a specific metric assigned, it doesn't get removed.
 		// The code doesn't remove any other default route (i.e. gw != 0.0.0.0).
-		route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: net.IPv4(0, 0, 0, 0)}
+		// an error is returned so ignore it
+		dst := &net.IPNet{
+			IP:   net.IPv4zero,
+			Mask: net.CIDRMask(0, 32),
+		}
+		route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: dst, Src: net.IPv4zero}
 		netlink.RouteDel(&route)
 
 		src := netconf.Addresses[0].IPNet.IP
@@ -222,7 +255,7 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 		if err != nil {
 			return fmt.Errorf("could not add default route (%+v) to interface %s: %v", route, iface.Attrs().Name, err)
 		}
-	}
 
+	}
 	return nil
 }

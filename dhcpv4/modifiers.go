@@ -4,8 +4,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/insomniacslk/dhcp/iana"
-	"github.com/insomniacslk/dhcp/rfc1035label"
+	"github.com/autonomy/dhcp/iana"
+	"github.com/autonomy/dhcp/rfc1035label"
 )
 
 // WithTransactionID sets the Transaction ID for the DHCPv4 packet

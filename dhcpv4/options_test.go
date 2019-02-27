@@ -121,6 +121,11 @@ func TestParseOption(t *testing.T) {
 			value: []byte{0, 0},
 			want:  "Intel x86PC",
 		},
+		{
+			code:  OptionClasslessStaticRouteOption,
+			value: []byte{32, 10, 128, 0, 1, 0, 0, 0, 0, 0, 10, 128, 0, 1},
+			want:  "[10.128.0.1/32 0.0.0.0, 0.0.0.0/0 10.128.0.1]",
+		},
 	} {
 		s := parseOption(tt.code, tt.value)
 		if got := s.String(); got != tt.want {
