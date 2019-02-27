@@ -210,6 +210,8 @@ func ConfigureInterface(ifname string, netconf *NetConf) error {
 			return fmt.Errorf("could not obtain interface when adding classless route: %v", err)
 		}
 
+		initialRouteList, _ := netlink.RouteList(iface, 2)
+
 		for _, croute := range netconf.Classless {
 			route := netlink.Route{LinkIndex: iface.Attrs().Index, Dst: croute.Destination, Gw: croute.Router, Protocol: 3, Type: 1, Table: 254}
 
